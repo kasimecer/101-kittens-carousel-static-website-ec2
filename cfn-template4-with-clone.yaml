@@ -6,23 +6,16 @@ Parameters:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: Must be the name of an existing EC2 KeyPair
-  LatestAmiId:
-    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-6.1-x86_64'
-
 
 Resources:
   WebServerInstance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: !Ref LatestAmiId
+      ImageId: ami-01c647eace872fc02
       InstanceType: t2.micro
       SecurityGroups:
         - !Ref WebServerSecurityGroup
       KeyName: !Ref KeyName
-      Tags: 
-        - Key: Name
-          Value: !Sub WebServerInstance_Kasim_for ${AWS::StackName}
       UserData:
         Fn::Base64: 
           |
@@ -38,6 +31,20 @@ Resources:
             wget ${FOLDER}cat3.png
             systemctl start httpd
             systemctl enable httpd
+
+
+            #!/bin/bash
+            yum update -y
+            yum install -y git
+            install -y httpd
+            cd /var/www/html
+            git clone https://github.com/mfaktasit/101-kittens-carousel-static-website-ec2.git
+            cd /var/www/html/101-kittens-carousel-static-website-ec2
+            cp cat0.jpg cat1.jpg cat2.jpg index.html ../
+            cd /var/www/html/
+            rm -r 101-kittens-carousel-static-website-ec2
+            systemctl start httpd.service
+            systemctl enable httpd.service
       
   WebServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -53,4 +60,3 @@ Outputs:
   WebsiteURL:
     Description: URL of the Kittens Carousel Application
     Value: !Sub "http://${WebServerInstance.PublicDnsName}"
-
