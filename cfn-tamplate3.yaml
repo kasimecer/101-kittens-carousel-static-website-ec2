@@ -11,22 +11,26 @@ Resources:
   WebServerInstance:
     Type: AWS::EC2::Instance
     Properties:
+      ImageId: ami-01c647eace872fc02
       InstanceType: t2.micro
       SecurityGroups:
         - !Ref WebServerSecurityGroup
       KeyName: !Ref KeyName
       UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          yum update -y
-          yum install -y httpd
-          systemctl start httpd
-          systemctl enable httpd
-          cd /var/www/html
-          yum install -y git
-          git clone https://github.com/yourusername/your-repo.git static-web
-          mv static-web/* .
-          chown apache:apache *
+        Fn::Base64: 
+          |
+            #! /bin/bash
+            yum update -y
+            yum install httpd -y
+            cd /var/www/html
+            FOLDER="https://raw.githubusercontent.com/kasimecer/101-kittens-carousel-static-website-ec2/main/static-web/"
+            wget ${FOLDER}index.html
+            wget ${FOLDER}cat0.jpg
+            wget ${FOLDER}cat1.jpg
+            wget ${FOLDER}cat2.jpg
+            wget ${FOLDER}cat3.png
+            systemctl start httpd
+            systemctl enable httpd
       
   WebServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -42,3 +46,4 @@ Outputs:
   WebsiteURL:
     Description: URL of the Kittens Carousel Application
     Value: !Sub "http://${WebServerInstance.PublicDnsName}"
+
